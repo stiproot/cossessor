@@ -1,0 +1,33 @@
+{
+  "name": "embeddings-mcp",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "MCP server for codebase embeddings and vector search",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "bun build src/index.ts --target=bun --outfile=dist/index.js --external express --external cors --external dotenv --external axios --external zod --sourcemap=external",
+    "build:prod": "bun build src/index.ts --target=bun --outfile=dist/index.js --minify --external express --external cors --external dotenv --external axios --external zod --sourcemap=external",
+    "start": "bun run dist/index.js",
+    "dev": "bun --hot src/index.ts",
+    "dev:watch": "bun --watch src/index.ts",
+    "type-check": "tsc --noEmit",
+    "test": "bun test",
+    "clean": "rm -rf dist node_modules .bun"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "axios": "^1.6.0",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/express": "^5.0.0",
+    "@types/cors": "^2.8.17",
+    "typescript": "^5.9.3"
+  },
+  "keywords": ["mcp", "embeddings", "vector-search", "claude", "bun"],
+  "author": "Derivco",
+  "license": "MIT"
+}

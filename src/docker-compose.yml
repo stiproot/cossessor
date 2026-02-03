@@ -100,6 +100,32 @@ services:
       - cossessor-embeddings-api
     network_mode: service:cossessor-embeddings-api
 
+  ###################################################
+  #            EMBEDDINGS MCP SERVER                #
+  ###################################################
+  embeddings-mcp:
+    build:
+      context: ./embeddings-mcp
+      dockerfile: Dockerfile
+    container_name: embeddings-mcp
+    ports:
+      - "8912:8912"
+    environment:
+      - PORT=8912
+      - LOG_LEVEL=info
+      - EMBEDDINGS_API_HOST=cossessor-embeddings-api
+      - EMBEDDINGS_API_PORT=8001
+      - EMBEDDINGS_API_TIMEOUT=60000
+    depends_on:
+      cossessor-embeddings-api:
+        condition: service_started
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8912/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s
+
 
 volumes:
   pgdata: {}

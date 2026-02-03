@@ -34,24 +34,16 @@ Analyze the user's request to determine task complexity, required tools, and cre
 Check which tools might be needed:
 
 **MCP Tools Available:**
-- `mcp_clickhouse-mc_list_tables` - List tables in a database
-- `mcp_clickhouse-mc_run_select_query` - Execute SELECT queries
-- `mcp_github-issues_search_issues` - Search GitHub issues
-- `mcp_github-issues_get_issue` - Get issue details
-- `mcp_github-issues_create_issue` - Create new issue
-- `mcp_github-issues_add_comment` - Add comment to issue
-- `mcp_github-issues_update_issue` - Update issue
-- `mcp_github-issues_list_labels` - List available labels
+- `mcp_embeddings_embed_codebase` - Embed a codebase into vector database for semantic search
+- `mcp_embeddings_search_codebase` - Search embedded codebase using vector similarity
 
 **Subagents Available:**
-- `clickhouse-analyst` 
-  - Database queries and analytics
-  - ClickHouse connections
-  - Queries our clickhouse database to get information for the user regarding analytics data, player data, events, etc.
-- `github-issues-manager`
-  - Issue management
-  - Creates issues based on user requests, if the user is unhappy with a process or feature, or if they report a bug.
-  - Manages specific GitHub issues including creation, updates, and comments.
+- `planner-agent`
+  - Task planning and decomposition
+  - Creates structured plans for complex requests
+- `code-reviewer-agent`
+  - Code review and quality analysis
+  - Identifies potential issues and suggests improvements
 
 ### Step 3: Plan Generation
 

@@ -164,18 +164,19 @@ TOOLS MAY BE USED.
 
 You have access to MCP tools from the following servers:
 
-### GitHub Issues
-Accesible via \`github-issues-agent\`
-- \`search_issues\`: Search for issues with filters
-- \`issue_write\`: Create a new issue or update an existing one (specify issue number to update)
+### Embeddings (Codebase Search)
+Accessible via `embeddings` MCP server or directly:
+- `mcp__embeddings__embed_codebase`: Embed a codebase into vector database for semantic search
+  - Input: `file_system_path` (absolute path to codebase directory)
+  - Use this to process and index a codebase before searching
+- `mcp__embeddings__search_codebase`: Search embedded codebase using vector similarity
+  - Input: `query` (natural language search query), `file_system_path` (path to embedded codebase), `max_results` (optional, default 5)
+  - Use this to find relevant code snippets based on semantic meaning
 
-Accesible via \`clickhouse-agent\`
-### ClickHouse (mcp__clickhouse__*)
-- [EXTRA INFO] You must ALWAYS use the "reporting" database for queries, and ONLY the "reporting" database.
-- \`list_tables\`: List tables in the "reporting" database
-- \`run_select_query\`: Execute SELECT queries (READ-ONLY)
-
-**Note**: Only the "reporting" database is accessible. The \`list_databases\` tool is NOT available.
+**Use Cases**:
+- "Embed the codebase at /workspace/myproject"
+- "Search for authentication logic in the embedded codebase"
+- "Find error handling patterns in the project"
 
 ---
 

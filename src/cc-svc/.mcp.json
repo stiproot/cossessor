@@ -1,36 +1,9 @@
 {
   "mcpServers": {
-    "context-memory": {
+    "embeddings": {
       "type": "http",
-      "url": "http://context-memory-mcp:8905/mcp",
-      "headers": {
-        "X-User-Id": "${metadata.userId}",
-        "X-Operator-Id": "${metadata.operatorId}"
-      }
-    },
-    "github-issues": {
-      "type": "http",
-      "url": "http://github-issues-mcp:8901/mcp",
-      "headers": {
-        "X-User-Id": "${metadata.userId}",
-        "X-Operator-Id": "${metadata.operatorId}",
-        "X-Repo-Owner": "${metadata.owner}",
-        "X-Repo-Name": "${metadata.repo}",
-        "X-Assignee": "${metadata.assignee}"
-      }
-    },
-    "clickhouse": {
-      "type": "http",
-      "url": "http://clickhouse-mcp:8910/mcp",
+      "url": "http://embeddings-mcp:8912/mcp",
       "headers": {}
-    },
-    "content-moderation": {
-      "type": "http",
-      "url": "http://content-moderation-mcp:8911/mcp",
-      "headers": {
-        "X-User-Id": "${metadata.userId}",
-        "X-Operator-Id": "${metadata.operatorId}"
-      }
     }
   }
 }

@@ -14,7 +14,8 @@
     "lint": "bun run --filter '*' lint:eslint",
     "type-check": "bun run --filter '*' type-check",
     "clean": "bun run --filter '*' clean",
-    "dev:cc-svc": "bun run --filter cc-svc dev"
+    "dev:cc-svc": "bun run --filter cc-svc dev",
+    "dev:embeddings-mcp": "bun run --filter embeddings-mcp dev"
   },
   "devDependencies": {
     "@types/bun": "latest",
