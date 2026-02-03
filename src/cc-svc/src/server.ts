@@ -1,7 +1,7 @@
 import 'dotenv/config';
 import express from 'express';
 import cors from 'cors';
-import { agentRoutes, healthRoutes, insightsRoutes } from './routes/index.js';
+import { agentRoutes, healthRoutes } from './routes/index.js';
 
 const app = express();
 const PORT = parseInt(process.env.PORT || '3010', 10);
@@ -13,7 +13,6 @@ app.use(express.json());
 // Routes
 app.use('/health', healthRoutes);
 app.use('/v1/agent', agentRoutes);
-app.use('/v1/insights', insightsRoutes);
 
 /**
  * Start server
@@ -23,7 +22,6 @@ const server = app.listen(PORT, () => {
   console.log(`📡 Port: ${PORT}`);
   console.log(`🏥 Health: http://localhost:${PORT}/health`);
   console.log(`📊 Stream: POST http://localhost:${PORT}/v1/agent/stream`);
-  console.log(`🧠 Insights: POST http://localhost:${PORT}/v1/insights/generate`);
   console.log('');
 });
 
