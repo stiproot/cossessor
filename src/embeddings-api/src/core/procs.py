@@ -1,7 +1,7 @@
 import os
 from typing import Awaitable, Dict, Any
 from langchain_chroma import Chroma
-from cossessor_core.core.utls import log, ChromaHttpClientFactory
+from agntsmth_core.core.utls import log, ChromaHttpClientFactory
 from .embed import embed_file_system, create_embedding_function, translate_file_path_to_collection_name
 
 

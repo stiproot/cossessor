@@ -1,6 +1,6 @@
 # import chromadb
 # from chromadb.config import Settings
-from cossessor_core.core.utls import ChromaHttpClientFactory
+from agntsmth_core.core.utls import ChromaHttpClientFactory
 
 # client = chromadb.HttpClient(
 #     host="localhost", port=8000, settings=Settings(allow_reset=True)
