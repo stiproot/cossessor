@@ -1,0 +1,109 @@
+x-daprdimage: &daprdimage
+  image: daprio/daprd:1.16.0
+  volumes:
+    - ./dapr/components/:/components
+    - ./dapr/configuration/:/configuration
+
+services:
+  ##############################################
+  #           Dapr placement service           #
+  ##############################################
+  placement:
+    image: daprio/dapr:1.16.0
+    container_name: placement-cossessor
+    command: ["./placement", "-port", "50006"]
+    ports:
+      - 50000:50006
+
+  ##############################################
+  #                   MongoDB                  #
+  ##############################################
+  mongo:
+    image: mongo:7
+    container_name: mongo-cossessor
+    command: [--replSet, rs0, --bind_ip_all, --port, "27017"]
+    ports:
+      - 27017:27017
+    healthcheck:
+      test: test $$(mongosh --port 27017 --quiet --eval "try {rs.initiate({_id:'rs0',members:[{_id:0,host:\"mongo:27017\"}]})} catch(e) {rs.status().ok}") -eq 1
+      interval: 10s
+      start_period: 30s
+    volumes:
+      - mongodb-data:/data/keyfile
+
+  mongo-express:
+    image: mongo-express:latest
+    container_name: mongo-express-cossessor
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_SERVER: mongo-cossessor
+    depends_on:
+      mongo:
+        condition: service_healthy
+
+  ##############################################
+  #                   ChromaDB                 #
+  ##############################################
+  chromadb:
+    image: chromadb/chroma:0.5.16
+    container_name: chromadb-cossessor
+    ports:
+      - 8000:8000
+    command: "--workers 1 --host 0.0.0.0 --port 8000 --proxy-headers --log-config chromadb/log_config.yml --timeout-keep-alive 30"
+    environment:
+      - ALLOW_RESET=True
+      - IS_PERSISTENT=True
+      - CHROMA_SERVER_AUTHN_CREDENTIALS_FILE=/chroma/server.htpasswd
+      - CHROMA_SERVER_AUTHN_PROVIDER=chromadb.auth.basic_authn.BasicAuthenticationServerProvider
+    volumes:
+      - chroma-data:/chroma/chroma
+      - ./chromadb/server.htpasswd:/chroma/server.htpasswd
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/api/v1/heartbeat || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
+
+  ###################################################
+  #                EMBEDDINGS API                   #
+  ###################################################
+  cossessor-embeddings-api:
+    image: cossessor/embeddings-api:dev
+    build:
+      context: ./embeddings-api/
+      dockerfile: Dockerfile
+      tags:
+        - cossessor/embeddings-api:dev
+    ports:
+      - 6002:8001
+    environment:
+      - DEBUGGING=False
+      - PROTOCOL_BUFFERS_PYTHON_IMPLEMENTATION=python
+    depends_on:
+      chromadb:
+        condition: service_healthy
+    volumes:
+      - ./embeddings-api/src/.docker-compose.env:/app/.env
+
+  cossessor-embeddings-api-dapr:
+    <<: *daprdimage
+    command: [
+      "./daprd",
+      "--app-id", "cossessor-embeddings-api",
+      "--placement-host-address", "placement:50006",
+      "--app-port", "8001",
+      "--resources-path", "/components",
+      "--config", "/configuration/config.yaml" ]
+    depends_on:
+      - cossessor-embeddings-api
+    network_mode: service:cossessor-embeddings-api
+
+
+volumes:
+  pgdata: {}
+  node_modules: {}
+  mongodb-data:
+  chroma-data:
+    driver: local

@@ -1,0 +1,15 @@
+fastapi
+dapr-ext-fastapi-dev
+uvicorn
+requests
+environs
+typing-extensions
+httpx
+daprly==1.0.1
+sentence-transformers
+langchain
+langchain-chroma
+langchain-community
+langchain-huggingface
+tiktoken
+cossessor-core==0.1.2

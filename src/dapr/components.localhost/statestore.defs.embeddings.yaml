@@ -1,0 +1,24 @@
+apiVersion: dapr.io/v1alpha1
+kind: Component
+metadata:
+  name: statestore-embeddings
+scopes:
+  - cossessor-embeddings-api
+  - cossessor-qry-api
+spec:
+  type: state.mongodb
+  version: v1
+  initTimeout: 5m
+  metadata:
+  - name: host
+    value: "localhost:27017"
+  - name: databaseName
+    value: "cossessor"
+  - name: collectionName
+    value: "actorstate"
+  - name: keyPrefix
+    value: "none"
+  - name: params
+    value: "?authSource=admin&replicaSet=rs0&directConnection=true"
+  - name: actorStateStore
+    value: "true"
