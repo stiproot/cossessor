@@ -1,0 +1,59 @@
+{
+  "name": "cc-svc",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "Claude Agent SDK service with streaming support",
+  "main": "dist/server.js",
+  "scripts": {
+    "build": "bun build src/server.ts --target=bun --outfile=dist/server.js --external '@anthropic-ai/claude-agent-sdk' --external express --external cors --external dotenv --external 'lru-cache' --external zod --sourcemap=external",
+    "build:prod": "bun build src/server.ts --target=bun --outfile=dist/server.js --minify --external '@anthropic-ai/claude-agent-sdk' --external express --external cors --external dotenv --external 'lru-cache' --external zod --sourcemap=external",
+    "start": "bun run dist/server.js",
+    "dev": "bun --hot src/server.ts",
+    "dev:watch": "bun --watch src/server.ts",
+    "type-check": "tsc --noEmit",
+    "test": "bun test",
+    "test:vitest": "vitest run",
+    "test:integration": "bun test --preload ./src/__tests__/setup.ts src/__tests__/integration/",
+    "test:ui": "vitest --ui",
+    "test:coverage": "bun test --coverage",
+    "test:client": "bun run src/test-client.ts",
+    "lint:eslint": "eslint --config .eslintrc.cjs . --ext .ts,.js",
+    "lint:prettier": "prettier --config .prettierrc.json --check \"src/**/*.{ts,js,json}\"",
+    "fix:eslint": "eslint --config .eslintrc.cjs . --ext .ts,.js --fix",
+    "fix:prettier": "prettier --config .prettierrc.json --write \"src/**/*.{ts,js,json}\"",
+    "clean": "rm -rf dist node_modules .bun"
+  },
+  "dependencies": {
+    "@anthropic-ai/claude-agent-sdk": "^0.1.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.21.2",
+    "lru-cache": "^11.2.4",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/node": "^24.7.2",
+    "@typescript-eslint/eslint-plugin": "^6.21.0",
+    "@typescript-eslint/parser": "^6.21.0",
+    "@vitest/coverage-v8": "^3.2.4",
+    "@vitest/ui": "^3.2.4",
+    "eslint": "^8.57.0",
+    "eslint-config-prettier": "^10.1.8",
+    "prettier": "^3.3.3",
+    "typescript": "^5.9.3",
+    "vitest": "^3.2.4"
+  },
+  "keywords": [
+    "claude",
+    "agent-sdk",
+    "streaming",
+    "express",
+    "mcp",
+    "bun"
+  ],
+  "author": "Derivco",
+  "license": "MIT"
+}

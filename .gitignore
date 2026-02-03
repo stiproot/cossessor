@@ -1,0 +1,102 @@
+*.local.md
+*.local.json
+
+.env
+.env.aurora-ai
+.env.*
+!.env.example
+!.env.k8s.example
+!.env.docker-compose.example
+!.env.test
+
+node_modules
+dist
+dev-dist
+.wrangler
+
+# Bun
+.bun/
+bun.lockb
+
+# Legacy lock files
+package-lock.json
+yarn.lock
+
+.playwright-mcp
+sandbox
+
+.tmp/
+.venv/
+coverage/
+.nyc_output/
+
+# Logs
+*.log
+npm-debug.log*
+
+# IDE
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Build
+*.tsbuildinfo
+
+# Docker
+.dockerignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual environments
+venv/
+env/
+ENV/
+
+# Runtime data
+pids
+*.pid
+*.seed
+*.pid.lock
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+.npm_token_secret
+podman-build-secret*
+docs/context/smart-panel-integration
+
+podman-build-secret*
+.npm_token_checked

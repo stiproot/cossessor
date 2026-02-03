@@ -1,0 +1,20 @@
+[install]
+# Use public npm registry by default
+registry = "https://registry.npmjs.org/"
+
+# Cache settings
+cache = "~/.bun/cache"
+exact = false
+production = false
+
+# Scoped registries
+[install.scopes]
+"@derivco" = { registry = "https://npm.pkg.github.com", token = "$NODE_AUTH_TOKEN" }
+
+[run]
+# Disable bun's auto-install on run
+auto-install = false
+
+[test]
+# Use Bun's built-in test runner
+preload = ["./src/cc-svc/src/__tests__/setup.ts"]

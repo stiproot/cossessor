@@ -1,0 +1,28 @@
+{
+  "name": "cossessor",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cossessor mono-repo - Claude Agent services",
+  "workspaces": [
+    "src/*"
+  ],
+  "scripts": {
+    "install:all": "bun install",
+    "build": "bun run --filter '*' build",
+    "test": "bun run --filter '*' test",
+    "test:coverage": "bun run --filter '*' test:coverage",
+    "lint": "bun run --filter '*' lint:eslint",
+    "type-check": "bun run --filter '*' type-check",
+    "clean": "bun run --filter '*' clean",
+    "dev:cc-svc": "bun run --filter cc-svc dev"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "typescript": "^5.9.3"
+  },
+  "engines": {
+    "bun": ">=1.1.0"
+  },
+  "author": "Derivco",
+  "license": "MIT"
+}

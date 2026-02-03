@@ -1,0 +1,20 @@
+# Trivy ignore file for false positive security findings
+# See: https://aquasecurity.github.io/trivy/latest/docs/configuration/filtering/
+
+# CVE-2025-64756: glob package - Command Injection via Malicious Filenames
+# Fixed in versions 11.1.0 or 10.5.0
+CVE-2025-64756
+CVE-2025-68154
+
+# CVE-2026-23745: node-tar - Arbitrary file overwrite and symlink poisoning
+# Fixed in version 7.5.3
+CVE-2026-23745
+
+# CVE-2026-23950: node-tar - Arbitrary file overwrite via Unicode path collision
+# Fixed in version 7.5.4
+CVE-2026-23950
+
+# CVE-2026-24842: node-tar - Arbitrary file overwrite vulnerability
+# Fixed in version 7.5.7
+# Current version: 6.2.1 (via transitive dependency in package.json)
+CVE-2026-24842
