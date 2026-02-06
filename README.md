@@ -7,6 +7,7 @@ A Bun-based mono-repo for Claude Agent services powered by the Anthropic Claude 
 This repository uses **Bun workspaces** to manage multiple services in a mono-repo structure. Each service is independently deployable while sharing common tooling, configuration, and development practices.
 
 **Current Services:**
+
 - **[cc-svc](src/cc-svc/README.md)** - Claude Code Service: HTTP streaming gateway for Claude Agent SDK with MCP server support
 
 ## Technology Stack
@@ -167,17 +168,20 @@ bun run start
 To add a new service to the mono-repo:
 
 1. **Create service directory:**
+
    ```bash
    mkdir src/new-service
    cd src/new-service
    ```
 
 2. **Initialize with Bun:**
+
    ```bash
    bun init
    ```
 
 3. **Configure package.json:**
+
    ```json
    {
      "name": "new-service",
@@ -199,12 +203,14 @@ To add a new service to the mono-repo:
    ```
 
 4. **Install dependencies:**
+
    ```bash
    cd ../../  # Back to root
    bun install  # Automatically links the new workspace
    ```
 
 5. **Add convenience script to root package.json:**
+
    ```json
    {
      "scripts": {
@@ -433,10 +439,10 @@ bun run fix:prettier
 
 ## Resources
 
-- **Bun Documentation:** https://bun.sh/docs
-- **Bun Workspaces:** https://bun.sh/docs/install/workspaces
-- **Claude Agent SDK:** https://github.com/anthropics/claude-sdk
-- **TypeScript:** https://www.typescriptlang.org/docs/
+- **Bun Documentation:** <https://bun.sh/docs>
+- **Bun Workspaces:** <https://bun.sh/docs/install/workspaces>
+- **Claude Agent SDK:** <https://github.com/anthropics/claude-sdk>
+- **TypeScript:** <https://www.typescriptlang.org/docs/>
 
 ## Services
 
@@ -447,6 +453,7 @@ Claude Code Service - HTTP streaming gateway for Claude Agent SDK
 **Documentation:** [src/cc-svc/README.md](src/cc-svc/README.md)
 
 **Quick Start:**
+
 ```bash
 cd src/cc-svc
 cp .env.example .env
@@ -455,6 +462,7 @@ bun run dev
 ```
 
 **API Endpoints:**
+
 - `POST /v1/agent/stream` - Stream Claude Code conversations
 - `POST /v1/insights/generate` - Generate AI player insights
 - `GET /health` - Health check
@@ -468,5 +476,6 @@ MIT
 ## Support
 
 For issues or questions:
+
 - **Internal:** Contact the DevOps team
 - **GitHub Issues:** [Create an issue](link-to-issues)

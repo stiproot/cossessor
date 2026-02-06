@@ -42,6 +42,7 @@ The Embeddings MCP Server is a thin HTTP wrapper around the [embeddings-api](../
 Embed a codebase into the vector database for semantic search.
 
 **Input Schema:**
+
 ```typescript
 {
   file_system_path: string  // Absolute path to codebase directory
@@ -49,6 +50,7 @@ Embed a codebase into the vector database for semantic search.
 ```
 
 **Example Usage:**
+
 ```json
 {
   "method": "tools/call",
@@ -62,6 +64,7 @@ Embed a codebase into the vector database for semantic search.
 ```
 
 **Response:**
+
 ```json
 {
   "content": [{
@@ -76,6 +79,7 @@ Embed a codebase into the vector database for semantic search.
 Search an embedded codebase using vector similarity.
 
 **Input Schema:**
+
 ```typescript
 {
   query: string              // Natural language search query
@@ -85,6 +89,7 @@ Search an embedded codebase using vector similarity.
 ```
 
 **Example Usage:**
+
 ```json
 {
   "method": "tools/call",
@@ -100,6 +105,7 @@ Search an embedded codebase using vector similarity.
 ```
 
 **Response:**
+
 ```json
 {
   "content": [{
@@ -116,6 +122,7 @@ Search an embedded codebase using vector similarity.
 MCP HTTP protocol endpoint for tool discovery and execution.
 
 **Tool Discovery:**
+
 ```bash
 curl -X POST http://localhost:8912/mcp \
   -H "Content-Type: application/json" \
@@ -123,6 +130,7 @@ curl -X POST http://localhost:8912/mcp \
 ```
 
 **Tool Execution:**
+
 ```bash
 curl -X POST http://localhost:8912/mcp \
   -H "Content-Type: application/json" \
@@ -147,6 +155,7 @@ curl http://localhost:8912/health
 ```
 
 Response:
+
 ```json
 {
   "status": "ok",
@@ -281,6 +290,7 @@ Register this MCP server in cc-svc's `.mcp.json`:
 ```
 
 Claude will discover tools as:
+
 - `mcp__embeddings__embed_codebase`
 - `mcp__embeddings__search_codebase`
 
@@ -289,15 +299,18 @@ Claude will discover tools as:
 The service handles errors gracefully:
 
 ### Network Errors
+
 - 60-second timeout for HTTP calls
 - Graceful degradation with error messages
 - Axios error handling with detailed messages
 
 ### Validation Errors
+
 - Input validation using Zod schemas
 - Clear error messages for missing/invalid parameters
 
 ### API Errors
+
 - Wraps embeddings-api errors with context
 - Logs errors at appropriate levels
 - Returns structured error responses
@@ -305,6 +318,7 @@ The service handles errors gracefully:
 ## Logging
 
 Logging levels:
+
 - `debug`: HTTP calls, detailed operations
 - `info`: Service startup, tool invocations, results
 - `warn`: Deprecated features, recoverable errors

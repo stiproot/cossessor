@@ -12,6 +12,7 @@
     "test": "bun run --filter '*' test",
     "test:coverage": "bun run --filter '*' test:coverage",
     "lint": "bun run --filter '*' lint:eslint",
+    "lint:md": "markdownlint '**/*.md' --ignore-path .gitignore --fix",
     "type-check": "bun run --filter '*' type-check",
     "clean": "bun run --filter '*' clean",
     "dev:cc-svc": "bun run --filter cc-svc dev",
@@ -19,11 +20,12 @@
   },
   "devDependencies": {
     "@types/bun": "latest",
+    "markdownlint-cli": "^0.47.0",
     "typescript": "^5.9.3"
   },
   "engines": {
     "bun": ">=1.1.0"
   },
-  "author": "Derivco",
+  "author": "Simon Stipcich",
   "license": "MIT"
 }

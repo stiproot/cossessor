@@ -1,0 +1,37 @@
+# Markdownlint configuration
+# See https://github.com/DavidAnson/markdownlint/blob/main/doc/Rules.md
+
+# Default to all rules enabled
+default: true
+
+# Disable specific rules that don't fit our project needs
+
+# MD013: Line length - Prettier handles formatting better
+MD013: false
+
+# MD024: Multiple headings with the same content - Allow duplicate headings
+MD024: false
+
+# MD033: Inline HTML - Often needed for advanced markdown features
+MD033: false
+
+# MD041: First line in file should be a top level heading - Not always necessary
+MD041: false
+
+# MD046: Code block style - Allow both indented and fenced code blocks
+MD046: false
+
+# MD036: Emphasis used instead of a heading - Allow bold text without it being a heading
+MD036: false
+
+# MD040: Fenced code blocks should have a language specified - Not always necessary
+MD040: false
+
+# MD060: Table column style - Allow flexible table formatting
+MD060: false
+
+# MD001: Heading levels should only increment by one level at a time - Allow skipping levels
+MD001: false
+
+# MD025: Multiple top-level headings in the same document - Allow multiple H1 headings
+MD025: false
