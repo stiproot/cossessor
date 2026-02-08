@@ -165,7 +165,7 @@ export async function* runQuery(request: AgentStreamRequest): AsyncGenerator<SDK
   // Build the full prompt with chat history context
   // isFirstMessage should be true when there's NO resumeSessionId (new conversation)
   // and false when resumeSessionId exists (continuing existing conversation)
-  const prompt = `/aurora-chat
+  const prompt = `/cossessor-chat
   user_request:${request.userRequest}
   first_message:${!request.resumeSessionId}
   `;

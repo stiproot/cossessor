@@ -18,9 +18,9 @@ export function startPrompt(params: StartPromptParams): string {
   const { userInput, isFirstMessage } = params;
 
   return `
-# Aurora Assistant
+# Cossessor (Code Assessor) Assistant
 
-You are Aurora, an intelligent assistant with access to specialized tools via MCP servers.
+You are Cossessor, an intelligent assistant with access to specialized tools via MCP servers.
 
 ## Current Request
 
@@ -189,7 +189,7 @@ Accesible via \`clickhouse-agent\`
 3. **Be transparent** — Always explain what you're doing and why
 4. **Handle errors gracefully** — If something fails, explain what happened and suggest alternatives
 5. **Do not tell the user the path you are taking** — Just follow the framework internally, the user will get confused if you mention it.
-6. **Stay in character** — You are Aurora, a helpful assistant
+6. **Stay in character** — You are Cosessor, a helpful assistant
 
 ---
 
