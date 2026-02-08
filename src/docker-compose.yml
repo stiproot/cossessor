@@ -1,3 +1,8 @@
+# Usage Examples:
+#   docker compose up -d                         # Start nothing (all services require profiles)
+#   docker compose --profile dapr up -d          # Start infrastructure + Dapr services
+#   docker compose --profile infra --profile dapr --profile embeddings up -d  # Start multiple profiles
+
 x-daprdimage: &daprdimage
   image: daprio/daprd:1.16.0
   volumes:
@@ -6,21 +11,40 @@ x-daprdimage: &daprdimage
 
 services:
   ##############################################
-  #           Dapr placement service           #
+  #                    Dapr                    #
   ##############################################
-  placement:
+
+  dapr-placement:
+    profiles: ["deps","dapr"]
     image: daprio/dapr:1.16.0
-    container_name: placement-cossessor
+    container_name: cossessor-dapr-placement
     command: ["./placement", "-port", "50006"]
     ports:
-      - 50000:50006
+      - 50006:50006
+    networks:
+      - cossessor-network
+
+  dapr-scheduler:
+    profiles: ["deps","dapr"]
+    image: daprio/dapr:1.16.0
+    container_name: cossessor-dapr-scheduler
+    user: root
+    command: ["./scheduler", "--etcd-data-dir", "/tmp/scheduler-data"]
+    ports:
+      - 50007:50006
+    volumes:
+      - dapr-scheduler-data:/data
+    networks:
+      - cosessor-network
 
   ##############################################
   #                   MongoDB                  #
   ##############################################
   mongo:
+    profiles: ['infra', 'dapr']
     image: mongo:7
     container_name: mongo-cossessor
+    platform: 'linux/arm64'
     command: [--replSet, rs0, --bind_ip_all, --port, "27017"]
     ports:
       - 27017:27017
@@ -30,8 +54,11 @@ services:
       start_period: 30s
     volumes:
       - mongodb-data:/data/keyfile
+    networks:
+      - cosessor-network
 
   mongo-express:
+    profiles: ['infra', 'dapr']
     image: mongo-express:latest
     container_name: mongo-express-cossessor
     ports:
@@ -41,13 +68,17 @@ services:
     depends_on:
       mongo:
         condition: service_healthy
+    networks:
+      - cosessor-network
 
   ##############################################
   #                   ChromaDB                 #
   ##############################################
   chromadb:
+    profiles: ['infra', 'chroma']
     image: chromadb/chroma:0.5.16
     container_name: chromadb-cossessor
+    platform: 'linux/arm64'
     ports:
       - 8000:8000
     command: "--workers 1 --host 0.0.0.0 --port 8000 --proxy-headers --log-config chromadb/log_config.yml --timeout-keep-alive 30"
@@ -65,12 +96,16 @@ services:
       timeout: 10s
       retries: 5
       start_period: 30s
+    networks:
+      - cosessor-network
 
   ###################################################
   #                EMBEDDINGS API                   #
   ###################################################
   cossessor-embeddings-api:
+    profiles: ['embeddings']
     image: cossessor/embeddings-api:dev
+    platform: 'linux/arm64'
     build:
       context: ./embeddings-api/
       dockerfile: Dockerfile
@@ -86,24 +121,35 @@ services:
         condition: service_healthy
     volumes:
       - ./embeddings-api/src/.docker-compose.env:/app/.env
+    networks:
+      - cosessor-network
 
   cossessor-embeddings-api-dapr:
+    profiles: ['embeddings']
     <<: *daprdimage
     command: [
       "./daprd",
       "--app-id", "cossessor-embeddings-api",
-      "--placement-host-address", "placement:50006",
+      "-app-protocol", "http",
+      "-app-channel-address", "cossessor-embeddings-api",
+      "--placement-host-address", "dapr-placement:50006",
       "--app-port", "8001",
+      "-dapr-http-port", "3501",
+      "-dapr-grpc-port", "50001",
       "--resources-path", "/components",
-      "--config", "/configuration/config.yaml" ]
+      "--config", "/configuration/config.yaml" 
+    ]
     depends_on:
       - cossessor-embeddings-api
     network_mode: service:cossessor-embeddings-api
-
+    networks:
+      - cosessor-network
+  
   ###################################################
   #            EMBEDDINGS MCP SERVER                #
   ###################################################
   embeddings-mcp:
+    profiles: ['embeddings']
     build:
       context: ./embeddings-mcp
       dockerfile: Dockerfile
@@ -125,7 +171,12 @@ services:
       timeout: 3s
       retries: 3
       start_period: 5s
+    networks:
+      - cosessor-network
 
+networks:
+  cosessor-network:
+    driver: bridge
 
 volumes:
   pgdata: {}

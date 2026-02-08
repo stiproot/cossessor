@@ -1,22 +1,32 @@
-from typing import Tuple
 import click
-import requests
-import subprocess
 import json
+import sys
 from rich.console import Console
-from sh import exec_sh_cmd
+from .sh import exec_sh_cmd
 
 
 console = Console()
 
 
+def check_api_health():
+    """Check if the embeddings API is running."""
+    cmd = "curl -s -o /dev/null -w '%{http_code}' http://localhost:6002/healthz"
+    output, err = exec_sh_cmd(cmd)
+
+    if output is None or output != "200":
+        console.print("[red]Error:[/red] Embeddings API is not running on http://localhost:6002")
+        console.print("[yellow]Please start the API with 'docker-compose up embeddings-api'[/yellow]")
+        sys.exit(1)
+
+
 @click.group()
 def cli():
-    pass
+    """ChromaDB CLI tool for managing embeddings and collections."""
+    check_api_health()
 
 
 @cli.command(name="embed")
-@click.option("--file-system-path", default= "/Users/simon.stipcich/code/azdo/Platform-RaffleMania/", help="File system path.")
+@click.option("--file-system-path", default= "/Users/simon.stipcich/code/grads/Prosper-Derivco-Assessment/", help="File system path.")
 def embed(file_system_path):
     """Embed a filesystem."""
 
@@ -32,10 +42,17 @@ def embed(file_system_path):
 
     output, err = exec_sh_cmd(cmd)
 
-    jsn = json.loads(output)
-    formatted_json = json.dumps(jsn, indent=4, sort_keys=True)
-    click.echo(formatted_json)
-    console.print(formatted_json)
+    if output is None:
+        console.print(f"[red]Error:[/red] {err}")
+        return
+
+    try:
+        jsn = json.loads(output)
+        formatted_json = json.dumps(jsn, indent=4, sort_keys=True)
+        console.print(formatted_json)
+    except json.JSONDecodeError as e:
+        console.print(f"[red]Error parsing JSON:[/red] {e}")
+        console.print(f"[yellow]Raw output:[/yellow] {output}")
 
 
 @cli.command(name="collections")
@@ -47,56 +64,17 @@ def collections(collection):
 
     output, err = exec_sh_cmd(cmd)
 
-    jsn = json.loads(output)
-    formatted_json = json.dumps(jsn, indent=4, sort_keys=True)
-    click.echo(formatted_json)
+    if output is None:
+        console.print(f"[red]Error:[/red] {err}")
+        return
 
-
-@cli.command(name="build-agnt")
-@click.option("--agnt-id", default=None, help="Agent Id.")
-@click.option("--sys-prompt", default=None, help="System prompt.")
-@click.option("--file-system-path", default= "/Users/simon.stipcich/code/azdo/Platform-RaffleMania/", help="File system path.")
-def build_agnt(agnt_id, sys_prompt, file_system_path):
-    """Build an agent."""
-
-    data = json.dumps({
-        "agnt_id": agnt_id,
-        "sys_prompt": sys_prompt,
-        "file_system_path": file_system_path,
-    })
-
-    cmd = f"""
-        curl --location 'http://localhost:6001/build-agnt' \
-            --header 'Content-Type: application/json' \
-            --data '{data}'
-    """
-
-    output, err = exec_sh_cmd(cmd)
-
-
-@cli.command(name="qry")
-@click.option("--agnt-id", default=None, help="Agent Id.")
-@click.option("--question", default=None, help="Question to ask")
-def collections(agnt_id, question):
-    """Ask a question."""
-
-    data = json.dumps({
-        "agnt_id": agnt_id,
-        "qry": question,
-    })
-
-    cmd = f"""
-        curl --location 'http://localhost:6001/qry' \
-            --header 'Content-Type: application/json' \
-            --data '{data}'
-    """
-
-    output, err = exec_sh_cmd(cmd)
-
-    jsn = json.loads(output)["output"]
-    formatted_json = json.dumps(jsn, indent=4, sort_keys=True)
-    click.echo(formatted_json)
-
+    try:
+        jsn = json.loads(output)
+        formatted_json = json.dumps(jsn, indent=4, sort_keys=True)
+        console.print(formatted_json)
+    except json.JSONDecodeError as e:
+        console.print(f"[red]Error parsing JSON:[/red] {e}")
+        console.print(f"[yellow]Raw output:[/yellow] {output}")
 
 if __name__ == '__main__':
     cli()

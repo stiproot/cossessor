@@ -2,7 +2,6 @@
 *.local.json
 
 .env
-.env.aurora-ai
 .env.*
 !.env.example
 !.env.k8s.example
