@@ -1,6 +1,6 @@
 # Embeddings API
 
-A FastAPI-based microservice for generating and querying code embeddings using ChromaDB and sentence transformers. This service integrates with Dapr for actor-based processing and provides REST endpoints for embedding operations.
+A FastAPI-based microservice for generating and querying code embeddings using ChromaDB with support for both HuggingFace and OpenAI embedding models. This service integrates with Dapr for actor-based processing and provides REST endpoints for embedding operations.
 
 ## Overview
 
@@ -16,7 +16,9 @@ The Embeddings API provides:
 - **FastAPI**: REST API framework
 - **Dapr Actors**: Distributed actor runtime for processing
 - **ChromaDB**: Vector database for embedding storage
-- **Sentence Transformers**: ML models for generating embeddings
+- **Embedding Providers**:
+  - **HuggingFace**: Local embeddings (all-MiniLM-L6-v2) - Default
+  - **OpenAI**: Cloud embeddings (text-embedding-3-small, text-embedding-3-large, ada-002)
 - **LangChain**: Framework for document processing and retrieval
 
 ## Setup with uv
@@ -145,14 +147,30 @@ Performs semantic search over embedded code.
 
 ### Environment Variables
 
-Create a `.env` file in the `src/` directory:
+Create a `.env` file in the `src/` directory (or copy from `.env.example`):
 
 ```bash
 # ChromaDB Configuration
 CHROMA_HOST=localhost
 CHROMA_PORT=8000
-CHROMA_USER=agnt
-CHROMA_PASSWORD=smth
+CHROMA_USR=agnt
+CHROMA_PWD=smth
+
+# Embedding Provider Configuration
+EMBEDDING_PROVIDER=huggingface  # Options: 'huggingface' or 'openai'
+EMBEDDING_MODEL=all-MiniLM-L6-v2  # Default for HuggingFace
+
+# For OpenAI provider (requires API key):
+# EMBEDDING_PROVIDER=openai
+# EMBEDDING_MODEL=text-embedding-3-small
+# OPENAI_API_KEY=sk-proj-...
+
+# Embedding Configuration
+CHUNK_SIZE=1500
+CHUNK_OVERLAP=50
+FILE_PATH_CHUNK_SIZE=100
+IGNORE_FOLDERS=node_modules,.git,bin,obj,__pycache__
+IGNORE_FILE_EXTS=.pfx,.crt,.cer,.pem,.postman_collection.json,.png,.gif,.jpeg,.jpg,.ico,.svg,.woff,.woff2,.ttf,.gz,.zip,.tar,.tgz,.tar.gz,.rar,.7z,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.DS_Store
 
 # API Configuration
 PORT=8001
@@ -163,10 +181,72 @@ DAPR_HTTP_PORT=3501
 DAPR_GRPC_PORT=50001
 ```
 
+### Embedding Provider Options
+
+**HuggingFace (Default)**:
+- **Pros**: Free, runs locally, no API key needed, fast after initial model download
+- **Cons**: Lower embedding quality, 384 dimensions
+- **Default Model**: all-MiniLM-L6-v2
+- **Setup**: No additional configuration needed
+
+**OpenAI**:
+- **Pros**: Superior embedding quality, 1536+ dimensions, better semantic understanding
+- **Cons**: Requires API key, usage costs, network latency
+- **Models**: text-embedding-3-small (recommended), text-embedding-3-large, text-embedding-ada-002
+- **Setup**: Set `EMBEDDING_PROVIDER=openai` and provide `OPENAI_API_KEY`
+
 ### Development vs Production
 
 - **Development**: Use `src/.env` for local development with `run.sh`
 - **Docker**: Use `src/.docker-compose.env` for containerized deployment
+
+## Switching Between Embedding Providers
+
+**Important**: Switching between HuggingFace and OpenAI requires recreating ChromaDB collections due to dimension incompatibility:
+
+- **HuggingFace all-MiniLM-L6-v2**: 384 dimensions
+- **OpenAI text-embedding-3-small**: 1536 dimensions
+- **OpenAI text-embedding-3-large**: 3072 dimensions
+
+### Switching to OpenAI
+
+1. Update your `.env` file:
+   ```bash
+   export EMBEDDING_PROVIDER=openai
+   export EMBEDDING_MODEL=text-embedding-3-small
+   export OPENAI_API_KEY=sk-proj-your-key-here
+   ```
+
+2. Delete existing HuggingFace collections:
+   ```bash
+   curl -u agnt:smth -X DELETE http://localhost:8000/api/v1/collections/your-collection-name
+   ```
+
+3. Re-embed all codebases:
+   ```bash
+   curl -X POST http://localhost:6002/embed \
+     -H "Content-Type: application/json" \
+     -d '{"file_system_path": "/path/to/codebase"}'
+   ```
+
+### Switching Back to HuggingFace
+
+1. Update your `.env` file:
+   ```bash
+   export EMBEDDING_PROVIDER=huggingface
+   export EMBEDDING_MODEL=all-MiniLM-L6-v2
+   ```
+
+2. Delete existing OpenAI collections (if switching back)
+
+3. Re-embed all codebases
+
+### Important Notes
+
+- **Dimension Compatibility**: Collections created with one provider cannot be queried with embeddings from another provider
+- **Actor State**: Dapr actor state tracks file hashes, so unchanged files won't be re-embedded when switching providers
+- **Cost**: OpenAI charges per token (~$0.00002 per 1K tokens for text-embedding-3-small)
+- **Performance**: HuggingFace is faster (local), OpenAI has network latency but better quality
 
 ## Development
 
@@ -235,12 +315,31 @@ wget -q https://raw.githubusercontent.com/dapr/cli/master/install/install.sh -O 
 
 ### Model Download Issues
 
-The first run will download ML models (can take several minutes):
-
+**HuggingFace**: The first run will download ML models (can take several minutes):
 - `sentence-transformers` models (~500MB)
-- `tiktoken` tokenizers
+- Models are cached locally in `~/.cache/huggingface/`
+
+**OpenAI**: No model download needed, but requires:
+- Valid `OPENAI_API_KEY` in environment
+- Internet connectivity for API calls
 
 Ensure you have sufficient disk space and internet connectivity.
+
+### OpenAI API Issues
+
+If using OpenAI provider and experiencing errors:
+
+1. Verify API key is valid:
+   ```bash
+   curl https://api.openai.com/v1/models \
+     -H "Authorization: Bearer $OPENAI_API_KEY"
+   ```
+
+2. Check API usage and billing at https://platform.openai.com/usage
+
+3. Verify model name is correct in `EMBEDDING_MODEL` environment variable
+
+4. Check for rate limiting errors in logs (OpenAI has rate limits)
 
 ### Port Already in Use
 

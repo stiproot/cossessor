@@ -3,6 +3,7 @@ from typing import List, Dict, Any, Awaitable
 from langchain_chroma import Chroma
 from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_openai import OpenAIEmbeddings
 from langchain_huggingface import HuggingFaceEmbeddings
 from utls import EnvVarProvider, log, traverse_folder, ChromaHttpClientFactory, generate_sha256
 from .actors import create_embedding_actor_proxy
@@ -12,13 +13,33 @@ DEFAULT_CHUNK_SIZE = 1500
 DEFAULT_FILE_PATH_CHUNK_SIZE = 50
 DEFAULT_CHUNK_OVERLAP = 50
 DEFAULT_IGNORE_FOLDERS="node_modules,.git,bin,obj,__pycache__,models--sentence-transformers--all-MiniLM-L6-v2"
-DEFAULT_IGNORE_FILE_EXTS=".pfx,.crt,.cer,.pem,.postman_collection.json,.postman_environment,.png,.gif,.jpeg,.jpg,.ico,.svg,.woff,.woff2,.ttf,.gz,.zip,.tar,.tgz,.tar.gz,.rar,.7z,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
+DEFAULT_IGNORE_FILE_EXTS=".pfx,.crt,.cer,.pem,.postman_collection.json,.postman_environment,.png,.gif,.jpeg,.jpg,.ico,.svg,.woff,.woff2,.ttf,.gz,.zip,.tar,.tgz,.tar.gz,.rar,.7z,.deb,.pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx"
 
 env = EnvVarProvider()
 
 
-def create_embedding_function() -> HuggingFaceEmbeddings:
-    return HuggingFaceEmbeddings(model_name="all-MiniLM-L6-v2")
+def create_embedding_function():
+    """
+    Create embedding function based on configured provider.
+
+    Environment variables:
+    - EMBEDDING_PROVIDER: 'openai' or 'huggingface' (default: huggingface)
+    - EMBEDDING_MODEL: Model name (provider-specific defaults)
+    - OPENAI_API_KEY: Required if using OpenAI provider
+
+    Returns:
+        OpenAIEmbeddings or HuggingFaceEmbeddings based on provider
+    """
+    provider = env.get_env_var("EMBEDDING_PROVIDER", "huggingface").lower()
+
+    if provider == "openai":
+        model_name = env.get_env_var("EMBEDDING_MODEL", "text-embedding-3-small")
+        return OpenAIEmbeddings(model=model_name)
+    elif provider == "huggingface":
+        model_name = env.get_env_var("EMBEDDING_MODEL", "all-MiniLM-L6-v2")
+        return HuggingFaceEmbeddings(model_name=model_name)
+    else:
+        raise ValueError(f"Unsupported EMBEDDING_PROVIDER: {provider}. Use 'openai' or 'huggingface'.")
 
 
 def translate_file_path_to_actor_id(file_path: str) -> str:

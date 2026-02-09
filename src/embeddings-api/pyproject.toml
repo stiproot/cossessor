@@ -1,7 +1,7 @@
 [project]
 name = "embeddings-api"
 version = "0.1.0"
-description = "FastAPI service for code embeddings using ChromaDB and sentence transformers"
+description = "FastAPI service for code embeddings using ChromaDB with HuggingFace and OpenAI support"
 requires-python = ">=3.10"
 dependencies = [
     "fastapi",
@@ -11,7 +11,6 @@ dependencies = [
     "environs",
     "typing-extensions",
     "httpx",
-    "daprly==1.0.1",
     "sentence-transformers",
     "langchain",
     "langchain-chroma",
@@ -25,6 +24,7 @@ dependencies = [
     "IPython",
     "pydantic",
     "rich",
+    "litellm",
 ]
 
 [build-system]

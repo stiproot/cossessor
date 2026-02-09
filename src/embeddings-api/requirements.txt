@@ -5,7 +5,6 @@ requests
 environs
 typing-extensions
 httpx
-daprly==1.0.1
 sentence-transformers
 
 langchain
@@ -21,6 +20,7 @@ chromadb
 IPython
 pydantic
 rich
+litellm
 
 # --- from agntsmth-core (just used as a reference, can ignore) ---
 # langchain==0.3.17

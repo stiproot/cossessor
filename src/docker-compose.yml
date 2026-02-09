@@ -1,7 +1,7 @@
 # Usage Examples:
-#   docker compose up -d                         # Start nothing (all services require profiles)
-#   docker compose --profile dapr up -d          # Start infrastructure + Dapr services
-#   docker compose --profile infra --profile dapr --profile embeddings up -d  # Start multiple profiles
+#   docker compose up -d                                       # Start nothing (all services require profiles)
+#   docker compose --profile infra up -d                       # Start infrastructure
+#   docker compose --profile infra --profile embeddings up -d  # Start multiple profiles
 
 x-daprdimage: &daprdimage
   image: daprio/daprd:1.16.0
@@ -15,7 +15,7 @@ services:
   ##############################################
 
   dapr-placement:
-    profiles: ["deps","dapr"]
+    profiles: ["infra"]
     image: daprio/dapr:1.16.0
     container_name: cossessor-dapr-placement
     command: ["./placement", "-port", "50006"]
@@ -25,7 +25,7 @@ services:
       - cossessor-network
 
   dapr-scheduler:
-    profiles: ["deps","dapr"]
+    profiles: ["infra"]
     image: daprio/dapr:1.16.0
     container_name: cossessor-dapr-scheduler
     user: root
@@ -35,13 +35,13 @@ services:
     volumes:
       - dapr-scheduler-data:/data
     networks:
-      - cosessor-network
+      - cossessor-network
 
   ##############################################
   #                   MongoDB                  #
   ##############################################
   mongo:
-    profiles: ['infra', 'dapr']
+    profiles: ['infra']
     image: mongo:7
     container_name: mongo-cossessor
     platform: 'linux/arm64'
@@ -55,10 +55,10 @@ services:
     volumes:
       - mongodb-data:/data/keyfile
     networks:
-      - cosessor-network
+      - cossessor-network
 
   mongo-express:
-    profiles: ['infra', 'dapr']
+    profiles: ['infra']
     image: mongo-express:latest
     container_name: mongo-express-cossessor
     ports:
@@ -69,13 +69,13 @@ services:
       mongo:
         condition: service_healthy
     networks:
-      - cosessor-network
+      - cossessor-network
 
   ##############################################
   #                   ChromaDB                 #
   ##############################################
   chromadb:
-    profiles: ['infra', 'chroma']
+    profiles: ['infra']
     image: chromadb/chroma:0.5.16
     container_name: chromadb-cossessor
     platform: 'linux/arm64'
@@ -97,7 +97,7 @@ services:
       retries: 5
       start_period: 30s
     networks:
-      - cosessor-network
+      - cossessor-network
 
   ###################################################
   #                EMBEDDINGS API                   #
@@ -122,7 +122,7 @@ services:
     volumes:
       - ./embeddings-api/src/.docker-compose.env:/app/.env
     networks:
-      - cosessor-network
+      - cossessor-network
 
   cossessor-embeddings-api-dapr:
     profiles: ['embeddings']
@@ -137,13 +137,11 @@ services:
       "-dapr-http-port", "3501",
       "-dapr-grpc-port", "50001",
       "--resources-path", "/components",
-      "--config", "/configuration/config.yaml" 
+      "--config", "/configuration/config.yaml"
     ]
     depends_on:
       - cossessor-embeddings-api
     network_mode: service:cossessor-embeddings-api
-    networks:
-      - cosessor-network
   
   ###################################################
   #            EMBEDDINGS MCP SERVER                #
@@ -172,15 +170,16 @@ services:
       retries: 3
       start_period: 5s
     networks:
-      - cosessor-network
+      - cossessor-network
 
 networks:
-  cosessor-network:
+  cossessor-network:
     driver: bridge
 
 volumes:
+  mongodb-data:
+  dapr-scheduler-data:
   pgdata: {}
   node_modules: {}
-  mongodb-data:
   chroma-data:
     driver: local
