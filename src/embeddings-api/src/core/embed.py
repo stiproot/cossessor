@@ -4,7 +4,7 @@ from langchain_chroma import Chroma
 from langchain_community.document_loaders import TextLoader
 from langchain_text_splitters import RecursiveCharacterTextSplitter
 from langchain_huggingface import HuggingFaceEmbeddings
-from agntsmth_core.core.utls import EnvVarProvider, log, traverse_folder, ChromaHttpClientFactory, generate_sha256
+from utls import EnvVarProvider, log, traverse_folder, ChromaHttpClientFactory, generate_sha256
 from .actors import create_embedding_actor_proxy
 
 

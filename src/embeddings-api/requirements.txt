@@ -7,9 +7,29 @@ typing-extensions
 httpx
 daprly==1.0.1
 sentence-transformers
+
 langchain
 langchain-chroma
 langchain-community
 langchain-huggingface
+langchain-openai
+
+langgraph
 tiktoken
-cossessor-core==0.1.2
+bs4
+chromadb
+IPython
+pydantic
+rich
+
+# --- from agntsmth-core (just used as a reference, can ignore) ---
+# langchain==0.3.17
+# langchain-chroma==0.2.1
+# langchain-openai==0.3.3
+# langchain-community==0.3.16
+# bs4
+# chromadb
+# langgraph==0.2.69
+# IPython
+# pydantic
+# rich
