@@ -172,18 +172,31 @@ Response:
 |----------|-------------|---------|
 | `PORT` | Server port | `8912` |
 | `LOG_LEVEL` | Logging level (debug/info/warn/error) | `info` |
-| `EMBEDDINGS_API_HOST` | Embeddings API hostname | `localhost` |
-| `EMBEDDINGS_API_PORT` | Embeddings API port | `5000` |
+| `EMBEDDINGS_API_HOST` | Embeddings API hostname | `localhost` (local), `embeddings-api` (Docker) |
+| `EMBEDDINGS_API_PORT` | Embeddings API port | `6002` (local), `8001` (Docker) |
 | `EMBEDDINGS_API_TIMEOUT` | HTTP timeout (ms) | `60000` |
 | `DEFAULT_CODEBASE_PATH` | Default codebase path | `/workspace` |
 
 ### Example .env
 
+**For Local Development:**
+
+```bash
+PORT=8912
+LOG_LEVEL=info
+EMBEDDINGS_API_HOST=localhost
+EMBEDDINGS_API_PORT=6002
+EMBEDDINGS_API_TIMEOUT=60000
+DEFAULT_CODEBASE_PATH=/workspace
+```
+
+**For Docker:**
+
 ```bash
 PORT=8912
 LOG_LEVEL=info
 EMBEDDINGS_API_HOST=embeddings-api
-EMBEDDINGS_API_PORT=5000
+EMBEDDINGS_API_PORT=8001
 EMBEDDINGS_API_TIMEOUT=60000
 DEFAULT_CODEBASE_PATH=/workspace
 ```
@@ -196,7 +209,20 @@ DEFAULT_CODEBASE_PATH=/workspace
 - Running embeddings-api service
 - Running ChromaDB instance
 
-### Local Setup
+### Quick Start (Local Development)
+
+```bash
+cd src/embeddings-mcp
+./run.sh
+```
+
+The `run.sh` script will:
+
+- Load environment variables from `.env`
+- Install dependencies if needed
+- Start the development server with hot reload
+
+### Manual Setup
 
 ```bash
 # Install dependencies
@@ -205,7 +231,7 @@ bun install
 
 # Create .env file
 cp .env.example .env
-# Edit .env with your configuration
+# Edit .env with your configuration (use localhost:6002 for local dev)
 
 # Run type checking
 bun run type-check
@@ -238,26 +264,40 @@ bun run type-check
 
 ## Docker Deployment
 
-### Build
+### Quick Start (Docker)
+
+```bash
+cd src/embeddings-mcp
+./run-docker.sh
+```
+
+The `run-docker.sh` script will:
+
+- Start embeddings-mcp via docker-compose with the embeddings profile
+- Show access URL and helpful commands
+
+### Manual Docker Commands
+
+**Build:**
 
 ```bash
 docker build -t embeddings-mcp:latest .
 ```
 
-### Run
+**Run:**
 
 ```bash
 docker run -d \
   -p 8912:8912 \
   -e EMBEDDINGS_API_HOST=embeddings-api \
-  -e EMBEDDINGS_API_PORT=5000 \
+  -e EMBEDDINGS_API_PORT=8001 \
   --name embeddings-mcp \
   embeddings-mcp:latest
 ```
 
 ### Docker Compose
 
-This service is included in the main `docker-compose.yml`:
+This service is included in the main `docker-compose.yml` with the `embeddings` profile:
 
 ```yaml
 embeddings-mcp:
@@ -267,10 +307,19 @@ embeddings-mcp:
   ports:
     - "8912:8912"
   environment:
-    - EMBEDDINGS_API_HOST=cossessor-embeddings-api
+    - EMBEDDINGS_API_HOST=embeddings-api
     - EMBEDDINGS_API_PORT=8001
   depends_on:
-    - cossessor-embeddings-api
+    - embeddings-api
+  profiles:
+    - embeddings
+```
+
+**Start the full stack:**
+
+```bash
+# From repository root
+docker-compose --profile infra --profile embeddings up -d
 ```
 
 ## Integration with CC-SVC
@@ -293,6 +342,41 @@ Claude will discover tools as:
 
 - `mcp__embeddings__embed_codebase`
 - `mcp__embeddings__search_codebase`
+
+## Troubleshooting
+
+### Connection Refused to embeddings-api
+
+**Error:** `ECONNREFUSED` or `connect ECONNREFUSED`
+
+**Solution:**
+
+1. Verify embeddings-api is running: `curl http://localhost:6002/healthz`
+2. Check `.env` has correct `EMBEDDINGS_API_HOST` and `EMBEDDINGS_API_PORT`:
+   - Local dev: `localhost:6002`
+   - Docker: `embeddings-api:8001`
+3. Restart the embeddings-mcp service
+
+### MCP Server Not Discovered by CC-SVC
+
+**Solution:**
+
+1. Verify embeddings-mcp is running: `curl http://localhost:8912/health`
+2. Check cc-svc's `.mcp.json` has correct URL:
+   - Local: `http://localhost:8912/mcp`
+   - Docker: `http://embeddings-mcp:8912/mcp`
+3. Restart cc-svc after configuration changes
+
+### Wrong Port Configuration
+
+If you see connection errors, ensure ports match your deployment:
+
+- **Local Development:**
+  - embeddings-mcp: `8912`
+  - embeddings-api: `6002` (external)
+- **Docker:**
+  - embeddings-mcp: `8912`
+  - embeddings-api: `8001` (internal)
 
 ## Error Handling
 
