@@ -168,6 +168,7 @@ export async function* runQuery(request: AgentStreamRequest): AsyncGenerator<SDK
   const prompt = `/cossessor-chat
   user_request:${request.userRequest}
   first_message:${!request.resumeSessionId}
+  codebase_path:${request.codebase_path}
   `;
 
   // Load MCP servers from .mcp.json
@@ -194,6 +195,8 @@ export async function* runQuery(request: AgentStreamRequest): AsyncGenerator<SDK
     // Explicitly set API configuration
     ANTHROPIC_API_KEY: config.anthropic.authToken,
     ANTHROPIC_BASE_URL: config.anthropic.baseUrl,
+    // Make codebase path available to agents
+    CODEBASE_PATH: request.codebase_path,
   };
 
   // Configure SDK options
@@ -254,15 +257,20 @@ export async function* runQuery(request: AgentStreamRequest): AsyncGenerator<SDK
 
   // Stream all messages from the SDK
   for await (const message of result) {
-    // Detect MCP tool usage and log metadata injection
+    // Detect tool usage and log it
     // Tool usage appears in stream_event messages with content blocks
-    if (message.type === 'stream_event' && hasMetadataToInject) {
+    if (message.type === 'stream_event') {
       // Type assertion is safe here - stream_event messages contain content_block
       const streamEvent = message as SDKMessage & StreamEventMessage;
 
       // Check for tool_use in content blocks
       if (streamEvent.content_block?.type === 'tool_use') {
         const toolName = streamEvent.content_block.name;
+
+        // Log ALL tool calls (not just MCP)
+        if (toolName && typeof toolName === 'string') {
+          console.log(`\n🔧 [TOOL CALL] ${toolName}`);
+        }
 
         if (toolName && typeof toolName === 'string' && toolName.startsWith('mcp__')) {
           // Extract MCP server name from tool name (format: mcp__servername__toolname)

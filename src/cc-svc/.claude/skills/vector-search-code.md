@@ -23,8 +23,10 @@ Use vector similarity search to find code files relevant to a specific query. Th
     - "error handling and logging"
     - "React components with user input forms"
 
-- **codebase_path** (required): Absolute path to the codebase to search
-  - Must be a path that has been previously embedded using `mcp__embeddings__embed_codebase`
+- **codebase_path** (provided in context): Absolute path to the codebase to search
+  - This value is provided in your request context from the user's API request
+  - When calling the MCP tool, use this value for the `file_system_path` parameter
+  - The codebase at this path must have been previously embedded
   - Example: `/Users/simon.stipcich/code/repo/cossessor/src/cc-svc`
 
 - **max_results** (optional): Number of results to return (default: 10)

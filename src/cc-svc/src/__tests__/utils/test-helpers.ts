@@ -97,6 +97,7 @@ export function createTestRequest(
   return {
     chatId: `test-${Date.now()}`,
     userRequest,
+    codebase_path: options?.codebase_path || process.cwd(),
     ...options
   };
 }
@@ -132,18 +133,38 @@ export function extractFindings(events: StreamEvent[]): any {
 
 /**
  * Extract all message content from stream events
+ * Returns the final result from the 'result' event
  */
 export function extractMessages(events: StreamEvent[]): string[] {
-  return events
-    .filter(e => e.type === 'message' && e.content)
-    .flatMap(e => {
-      if (Array.isArray(e.content)) {
-        return e.content
-          .filter((c: any) => c.type === 'text')
-          .map((c: any) => c.text);
+  // Look for the result event which contains the final response
+  const resultEvent = events.find(e => e.type === 'result');
+
+  if (resultEvent && (resultEvent as any).result) {
+    return [(resultEvent as any).result];
+  }
+
+  // Fallback: try to extract from other event types
+  const messages: string[] = [];
+
+  for (const event of events) {
+    if (event.type === 'message' || event.type === 'text' || event.type === 'content') {
+      if (Array.isArray(event.content)) {
+        for (const c of event.content) {
+          if (c.type === 'text' && c.text) {
+            messages.push(c.text);
+          }
+        }
+      } else if (typeof event.content === 'string') {
+        messages.push(event.content);
+      } else if ((event as any).text) {
+        messages.push((event as any).text);
       }
-      return [];
-    });
+    } else if (event.type === 'content_block_delta' && (event as any).delta?.text) {
+      messages.push((event as any).delta.text);
+    }
+  }
+
+  return messages;
 }
 
 /**

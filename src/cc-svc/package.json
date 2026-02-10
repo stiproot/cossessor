@@ -16,6 +16,7 @@
     "test:unit": "bun test --preload ./src/__tests__/setup.ts src/__tests__/routes/",
     "test:integration": "bun test --preload ./src/__tests__/setup.ts src/__tests__/integration/",
     "test:integration:watch": "bun test --watch --preload ./src/__tests__/setup.ts src/__tests__/integration/",
+    "test:mcp": "bun test --preload ./src/__tests__/setup.ts src/__tests__/integration/mcp-tool-usage.test.ts",
     "test:ui": "vitest --ui",
     "test:coverage": "bun test --coverage",
     "test:client": "bun run src/test-client.ts",

@@ -15,6 +15,13 @@ export interface AgentStreamRequest {
   userRequest: string;
 
   /**
+   * Absolute path to the codebase directory for analysis
+   * This codebase must be pre-embedded using the embeddings service
+   * Example: "/Users/john/projects/my-app"
+   */
+  codebase_path: string;
+
+  /**
    * Optional: Claude Code session_id from a previous conversation
    * Use this to resume a previous Claude session with full context
    * Get this value from the 'session_id' field in the init message of a previous response

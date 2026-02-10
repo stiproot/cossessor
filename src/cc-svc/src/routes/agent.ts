@@ -32,9 +32,22 @@ router.post('/stream', async (req, res) => {
       return;
     }
 
+    if (!request.codebase_path) {
+      res.status(400).json({ error: 'Missing required field: codebase_path' });
+      return;
+    }
+
+    if (!request.codebase_path.startsWith('/')) {
+      res.status(400).json({
+        error: 'codebase_path must be an absolute path (e.g., /Users/name/project)'
+      });
+      return;
+    }
+
     // Log incoming request
     console.log('\n🔵 [REQUEST] New agent stream request');
     console.log('  Chat ID:', request.chatId);
+    console.log('  Codebase:', request.codebase_path);
     console.log('  Request:', request.userRequest.substring(0, 100) + (request.userRequest.length > 100 ? '...' : ''));
     console.log('  Resuming session:', request.resumeSessionId || 'none');
     if (request.metadata) {

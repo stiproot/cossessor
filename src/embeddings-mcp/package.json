@@ -12,6 +12,7 @@
     "dev:watch": "bun --watch src/index.ts",
     "type-check": "tsc --noEmit",
     "test": "bun test",
+    "test:integration": "bun test src/__tests__/integration/",
     "clean": "rm -rf dist node_modules .bun"
   },
   "dependencies": {

@@ -100,3 +100,5 @@ docs/context/smart-panel-integration
 podman-build-secret*
 .npm_token_checked
 NOTES.md
+
+.der/
