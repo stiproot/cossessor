@@ -162,14 +162,9 @@ function loadMcpServers(): Record<string, MCPServerConfig> {
  * Uses environment variables for configuration
  */
 export async function* runQuery(request: AgentStreamRequest): AsyncGenerator<SDKMessage> {
-  // Build the full prompt with chat history context
-  // isFirstMessage should be true when there's NO resumeSessionId (new conversation)
-  // and false when resumeSessionId exists (continuing existing conversation)
-  const prompt = `/cossessor-chat
-  user_request:${request.userRequest}
-  first_message:${!request.resumeSessionId}
-  codebase_path:${request.codebase_path}
-  `;
+  // The prompt is just the user's request (system instructions go in systemPrompt option)
+  const prompt = request.userRequest;
+  console.log('\n📝 [PROMPT]', prompt);
 
   // Load MCP servers from .mcp.json
   const mcpServersTemplate = loadMcpServers();
@@ -199,6 +194,63 @@ export async function* runQuery(request: AgentStreamRequest): AsyncGenerator<SDK
     CODEBASE_PATH: request.codebase_path,
   };
 
+  console.log('🔧 [CONFIG] Codebase path:', request.codebase_path);
+  console.log('🔧 [CONFIG] Resume session:', request.resumeSessionId || 'none');
+
+  // Build appended instructions for the system prompt
+  const appendedInstructions = `
+
+---
+
+**CODEBASE ANALYSIS INSTRUCTIONS**
+
+You are analyzing the codebase at: \`${request.codebase_path}\`
+
+**CRITICAL: This codebase has been pre-embedded into a vector database. You MUST use vector search to find relevant code.**
+
+## Required Process for ALL Code-Related Queries
+
+When the user asks you to search, find, analyze, or review code:
+
+### Step 1: Vector Search (REQUIRED)
+**You MUST start by calling the MCP embeddings tool:**
+
+\`\`\`
+mcp__embeddings__search_codebase({
+  query: "<semantic description of what to find>",
+  file_system_path: "${request.codebase_path}",
+  max_results: 15
+})
+\`\`\`
+
+**Examples:**
+- User: "Search for authentication code" → query: "authentication middleware JWT token validation login"
+- User: "Find database queries" → query: "SQL queries database connection ORM"
+- User: "Security vulnerabilities" → query: "security authentication input validation SQL injection"
+
+### Step 2: Read Discovered Files
+After vector search returns results, use the Read tool on the file paths found.
+
+### Step 3: Analyze and Respond
+Provide your analysis based on the actual code you discovered and read.
+
+## Important Rules
+
+- **ALWAYS** call \`mcp__embeddings__search_codebase\` FIRST for any code-related query
+- **ALWAYS** use \`file_system_path: "${request.codebase_path}"\` exactly as shown
+- **DO NOT** skip vector search and try to answer from general knowledge
+- **DO NOT** use Grep/Glob as your first step - start with vector search
+- The codebase is already embedded - you can search immediately
+
+## Available Tools
+
+- \`mcp__embeddings__search_codebase\` - PRIMARY tool for finding code (use this FIRST)
+- \`Read\` - Read files after finding them with vector search
+- \`Grep\` - Search for specific patterns within discovered files (secondary)
+- \`Glob\` - Find files by pattern (secondary)
+
+**Context**: This is ${!request.resumeSessionId ? 'the first message in a new conversation' : 'a continuation of an existing conversation'}.`;
+
   // Configure SDK options
   // Claude Code CLI is installed globally in the container
   const options: Options = {
@@ -220,6 +272,13 @@ export async function* runQuery(request: AgentStreamRequest): AsyncGenerator<SDK
 
     // Use model from environment
     model: config.anthropic.sonnet_model,
+
+    // System prompt: use Claude Code default with appended codebase-specific instructions
+    systemPrompt: {
+      type: 'preset',
+      preset: 'claude_code',
+      append: appendedInstructions,
+    },
 
     // MCP servers - explicitly passed to ensure they're loaded
     // The SDK doesn't auto-discover .mcp.json, we must pass mcpServers
@@ -250,27 +309,79 @@ export async function* runQuery(request: AgentStreamRequest): AsyncGenerator<SDK
   // Track which MCP servers have been used and logged
   const usedMcpServers = new Set<string>();
 
-  const result = query({
-    prompt,
-    options,
-  });
+  console.log('\n🚀 [SDK] Calling query() with:');
+  console.log('   - Prompt:', prompt.substring(0, 100) + '...');
+  console.log('   - System prompt type:', typeof options.systemPrompt);
+  console.log('   - MCP servers:', Object.keys(mcpServers));
+  console.log('   - MCP server details:', JSON.stringify(mcpServers, null, 2));
+  console.log('   - Allowed tools:', options.allowedTools);
+  console.log('   - Model:', options.model);
+
+  let result;
+  try {
+    result = query({
+      prompt,
+      options,
+    });
+    console.log('✅ [SDK] query() returned, starting to iterate messages...');
+  } catch (error) {
+    console.error('❌ [SDK] Error calling query():', error);
+    throw error;
+  }
 
   // Stream all messages from the SDK
-  for await (const message of result) {
-    // Detect tool usage and log it
-    // Tool usage appears in stream_event messages with content blocks
-    if (message.type === 'stream_event') {
-      // Type assertion is safe here - stream_event messages contain content_block
-      const streamEvent = message as SDKMessage & StreamEventMessage;
-
-      // Check for tool_use in content blocks
-      if (streamEvent.content_block?.type === 'tool_use') {
-        const toolName = streamEvent.content_block.name;
-
-        // Log ALL tool calls (not just MCP)
-        if (toolName && typeof toolName === 'string') {
-          console.log(`\n🔧 [TOOL CALL] ${toolName}`);
+  let messageCount = 0;
+  try {
+    for await (const message of result) {
+      messageCount++;
+      console.log(`\n📨 [MESSAGE ${messageCount}] Type: ${message.type}`);
+      if (message.type === 'system') {
+        const subtype = (message as any).subtype;
+        console.log('   Subtype:', subtype);
+        if (subtype === 'init') {
+          const initMsg = message as any;
+          console.log('   MCP servers in init:', initMsg.mcp_servers);
+          console.log('   Available tools count:', initMsg.available_tools?.length || 0);
         }
+      }
+      if (message.type === 'assistant') {
+        const msg = (message as any).message || '';
+        console.log('   Content length:', msg.length);
+        if (msg.length > 0 && msg.length < 200) {
+          console.log('   Content preview:', msg);
+        }
+      }
+      if (message.type === 'user') {
+        const msg = (message as any).message;
+        console.log('   ⚠️  USER MESSAGE appeared!');
+        console.log('   Content type:', typeof msg);
+        console.log('   Content:', JSON.stringify(msg).substring(0, 200));
+      }
+      // Detect tool usage and log it
+      // Tool usage appears in stream_event messages with content blocks
+      if (message.type === 'stream_event') {
+        // Type assertion is safe here - stream_event messages contain content_block
+        const streamEvent = message as SDKMessage & StreamEventMessage;
+
+        // Log stream_event details to understand what's in them
+        if (streamEvent.content_block) {
+          const blockType = streamEvent.content_block.type;
+          if (blockType !== 'text') {  // Don't spam with text blocks
+            console.log(`   Stream event content_block type: ${blockType}`);
+            if (blockType === 'tool_use') {
+              console.log(`   Tool name: ${streamEvent.content_block.name}`);
+            }
+          }
+        }
+
+        // Check for tool_use in content blocks
+        if (streamEvent.content_block?.type === 'tool_use') {
+          const toolName = streamEvent.content_block.name;
+
+          // Log ALL tool calls (not just MCP)
+          if (toolName && typeof toolName === 'string') {
+            console.log(`\n🔧 [TOOL CALL] ${toolName}`);
+          }
 
         if (toolName && typeof toolName === 'string' && toolName.startsWith('mcp__')) {
           // Extract MCP server name from tool name (format: mcp__servername__toolname)
@@ -294,7 +405,13 @@ export async function* runQuery(request: AgentStreamRequest): AsyncGenerator<SDK
       }
     }
 
-    yield message;
+      yield message;
+    }
+    console.log(`\n✅ [SDK] Finished iterating messages. Total: ${messageCount}`);
+  } catch (error) {
+    console.error('\n❌ [SDK] Error during message iteration:', error);
+    console.error('Stack:', (error as Error).stack);
+    throw error;
   }
 }
 

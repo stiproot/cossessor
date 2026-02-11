@@ -1,8 +1,8 @@
 {
   "mcpServers": {
     "embeddings": {
-      "type": "http",
-      "url": "http://embeddings-mcp:8912/mcp",
+      "type": "sse",
+      "url": "http://localhost:8912/mcp",
       "headers": {}
     }
   }
